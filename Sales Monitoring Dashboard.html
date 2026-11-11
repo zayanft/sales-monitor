@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sales Monitoring Dashboard</title>
+<style>
+:root{
+  --bg:#f3f5fb;--surface:#fff;--ink:#16213e;--muted:#64708a;--line:#e3e8f2;--shadow:0 6px 24px rgba(30,41,90,.08);
+  --band1:#1e1b4b;--band2:#0f766e;
+  --c1:#4f46e5;--c1s:#e6e5fd;--c2:#0d9488;--c2s:#d3f3ee;--c3:#ea580c;--c3s:#fde5d6;--c4:#d97706;--c4s:#fcefcc;
+  --red:#dc2626;--reds:#fde2e2;--gray:#e8ebf3;
+  color-scheme:light;box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0c1120;--surface:#151c32;--ink:#e9eefb;--muted:#93a0bd;--line:#26304d;--shadow:0 6px 24px rgba(0,0,0,.35);
+  --band1:#14123a;--band2:#0b4f4a;
+  --c1:#818cf8;--c1s:#26255a;--c2:#2dd4bf;--c2s:#0f3d3a;--c3:#fb923c;--c3s:#4a2a14;--c4:#fbbf24;--c4s:#453309;
+  --red:#f87171;--reds:#4a1f1f;--gray:#222b47;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0c1120;--surface:#151c32;--ink:#e9eefb;--muted:#93a0bd;--line:#26304d;--shadow:0 6px 24px rgba(0,0,0,.35);
+  --band1:#14123a;--band2:#0b4f4a;
+  --c1:#818cf8;--c1s:#26255a;--c2:#2dd4bf;--c2s:#0f3d3a;--c3:#fb923c;--c3s:#4a2a14;--c4:#fbbf24;--c4s:#453309;
+  --red:#f87171;--reds:#4a1f1f;--gray:#222b47;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",sans-serif;line-height:1.45}
+.band{background:linear-gradient(120deg,var(--band1),var(--band2));color:#fff;padding:30px 0 90px}
+.in{max-width:1180px;margin:0 auto;padding:0 20px}
+.top{display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:center}
+.brand{display:flex;gap:14px;align-items:center}
+.logo{width:46px;height:46px;border-radius:14px;background:rgba(255,255,255,.16);display:grid;place-items:center}
+h1{font-size:1.7rem;margin:0;letter-spacing:-.02em}
+.sub{opacity:.78;font-size:.92rem}
+.seg{display:flex;background:rgba(255,255,255,.14);border-radius:12px;padding:4px;gap:2px}
+.seg button{font:inherit;font-size:.9rem;border:0;background:transparent;color:#fff;padding:7px 14px;border-radius:9px;cursor:pointer;opacity:.85}
+.seg button[aria-pressed="true"]{background:#fff;color:#1e1b4b;font-weight:600;opacity:1}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--c1);outline-offset:2px}
+.seg button:focus-visible{outline-color:#fff}
+main{margin-top:-62px;padding-bottom:48px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.card{background:var(--surface);border-radius:18px;box-shadow:var(--shadow);border:1px solid var(--line)}
+.kpi{padding:20px;position:relative;overflow:hidden}
+.kpi::after{content:"";position:absolute;right:-30px;top:-30px;width:110px;height:110px;border-radius:50%;background:var(--s);opacity:.7}
+.chip{width:42px;height:42px;border-radius:12px;background:var(--s);color:var(--c);display:grid;place-items:center;position:relative;z-index:1}
+.kpi .label{color:var(--muted);font-size:.9rem;margin-top:14px}
+.kpi .num{font-size:2.15rem;font-weight:800;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1.15}
+.kpi .note{font-size:.84rem;color:var(--muted);margin-top:2px}
+.row{display:grid;grid-template-columns:1.2fr 1fr;gap:16px;margin-top:16px}
+.box{padding:20px}
+.box h2,.ph h2{margin:0 0 14px;font-size:1.05rem}
+.stack{display:flex;height:16px;border-radius:99px;overflow:hidden;background:var(--gray)}
+.stack i{display:block;height:100%;transition:width .5s}
+.legend{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px;margin-top:18px}
+.legend div{display:flex;align-items:center;gap:8px;font-size:.92rem}
+.legend b{margin-left:auto;font-variant-numeric:tabular-nums}
+.dot{width:10px;height:10px;border-radius:50%;flex:none}
+.src{display:grid;gap:12px}
+.src div{display:grid;grid-template-columns:78px 1fr 34px;gap:10px;align-items:center;font-size:.9rem}
+.track{height:10px;background:var(--gray);border-radius:99px;overflow:hidden}
+.track i{display:block;height:100%;background:linear-gradient(90deg,var(--c1),var(--c2));border-radius:99px}
+.src span:last-child{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+.table{margin-top:16px;overflow:hidden}
+.ph{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;padding:18px 20px}
+.ph h2{margin:0}
+.tools{display:flex;flex-wrap:wrap;gap:8px}
+select,input{font:inherit;font-size:.92rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 13px}
+input{min-width:230px}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:860px}
+th,td{text-align:left;padding:13px 20px;font-size:.93rem;white-space:nowrap;border-top:1px solid var(--line)}
+th{color:var(--muted);font-weight:600;font-size:.84rem;background:var(--bg)}
+tbody tr:hover{background:var(--bg)}
+td.r,th.r{text-align:right;font-variant-numeric:tabular-nums}
+.who{display:flex;align-items:center;gap:12px}
+.av{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:.85rem;background:var(--s);color:var(--c)}
+.who b{display:block}.who span{color:var(--muted);font-size:.83rem}
+.tag{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;font-size:.82rem;font-weight:600;background:var(--s);color:var(--c)}
+.tag::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--c)}
+.pay{font-weight:700}
+.ok{color:var(--c2);font-weight:600}.no{color:var(--muted)}
+.empty{padding:40px;text-align:center;color:var(--muted)}
+.foot{padding:13px 20px;color:var(--muted);font-size:.85rem;border-top:1px solid var(--line)}
+@media (max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}.row{grid-template-columns:1fr}}
+@media (max-width:480px){.kpis{grid-template-columns:1fr}h1{font-size:1.4rem}input{min-width:0;width:100%}.legend{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.stack i{transition:none}}
+</style>
+</head>
+<body>
+<div class="band"><div class="in top">
+  <div class="brand">
+    <div class="logo"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg></div>
+    <div><h1>Sales monitoring</h1><div class="sub">NME app leads, registrations and payments</div></div>
+  </div>
+  <div class="seg" id="seg" role="group" aria-label="Date range">
+    <button data-r="all" aria-pressed="true">All time</button>
+    <button data-r="30" aria-pressed="false">30 days</button>
+    <button data-r="7" aria-pressed="false">7 days</button>
+  </div>
+</div></div>
+
+<main><div class="in">
+  <section class="kpis" id="kpis"></section>
+  <section class="row">
+    <div class="card box"><h2>Lead pipeline</h2><div class="stack" id="stack"></div><div class="legend" id="legend"></div></div>
+    <div class="card box"><h2>Registrations by source</h2><div class="src" id="src"></div></div>
+  </section>
+  <section class="card table">
+    <div class="ph">
+      <h2>Lead listings</h2>
+      <div class="tools">
+        <input id="q" type="search" placeholder="Search name, phone or source" aria-label="Search leads">
+        <select id="status" aria-label="Filter by status"><option value="">All statuses</option><option>New</option><option>Contacted</option><option>Registered</option><option>Lost</option></select>
+      </div>
+    </div>
+    <div class="scroll"><table>
+      <thead><tr><th>Lead</th><th>Source</th><th>Status</th><th>NME app</th><th class="r">Digital work</th><th class="r">Payment</th><th>Added</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table></div>
+    <div class="foot" id="foot"></div>
+  </section>
+</div></main>
+
+<script>
+// Sample data. Replace with your real leads. days = how many days ago the lead was added.
+const LEADS=[
+ {name:"Aarav Traders",phone:"98430 11201",src:"Walk-in",status:"Registered",app:true,work:3,pay:12500,days:2},
+ {name:"Meenakshi Textiles",phone:"98940 22318",src:"Referral",status:"Registered",app:true,work:2,pay:9800,days:3},
+ {name:"Sri Lakshmi Stores",phone:"90030 45512",src:"Instagram",status:"Contacted",app:false,work:1,pay:0,days:1},
+ {name:"Karthik Electricals",phone:"99441 70234",src:"Website",status:"New",app:false,work:0,pay:0,days:0},
+ {name:"Bharath Hardware",phone:"97901 33890",src:"Walk-in",status:"Registered",app:true,work:4,pay:15200,days:5},
+ {name:"Vasanth Pharmacy",phone:"98652 90017",src:"Cold call",status:"Lost",app:false,work:0,pay:0,days:9},
+ {name:"Priya Boutique",phone:"94435 66120",src:"Instagram",status:"Registered",app:true,work:2,pay:7400,days:6},
+ {name:"Annapoorna Sweets",phone:"98421 55008",src:"Referral",status:"Contacted",app:false,work:1,pay:0,days:4},
+ {name:"Global Tutorials",phone:"96777 12044",src:"Website",status:"Registered",app:true,work:3,pay:11000,days:12},
+ {name:"Kovai Fresh Mart",phone:"99520 83391",src:"Walk-in",status:"New",app:false,work:0,pay:0,days:1},
+ {name:"Sakthi Auto Care",phone:"97865 20456",src:"Cold call",status:"Contacted",app:false,work:2,pay:0,days:8},
+ {name:"Nila Opticals",phone:"98946 77123",src:"Referral",status:"Registered",app:true,work:1,pay:5600,days:15},
+ {name:"Royal Bakers",phone:"90950 31877",src:"Instagram",status:"Lost",app:false,work:0,pay:0,days:20},
+ {name:"Tamil Print House",phone:"94890 66452",src:"Website",status:"Registered",app:true,work:5,pay:18300,days:25},
+ {name:"Green Leaf Organics",phone:"99650 14780",src:"Walk-in",status:"New",app:false,work:0,pay:0,days:2}
+];
+const COL={New:"var(--c1)",Contacted:"var(--c4)",Registered:"var(--c2)",Lost:"var(--red)"};
+const SOFT={New:"var(--c1s)",Contacted:"var(--c4s)",Registered:"var(--c2s)",Lost:"var(--reds)"};
+const $=id=>document.getElementById(id);
+const inr=n=>"₹"+n.toLocaleString("en-IN");
+let range="all",first=true;
+const scoped=()=>range==="all"?LEADS:LEADS.filter(l=>l.days<=+range);
+const ic=p=>`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const ICONS=[
+ ic('<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>'),
+ ic('<rect x="6" y="2" width="12" height="20" rx="3"/><path d="M10 18h4M9 8l2 2 4-4"/>'),
+ ic('<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 21h8M12 16v5"/>'),
+ ic('<path d="M6 4h12M6 9h12M9 4c6 0 6 9 0 9H6l8 7"/>')
+];
+function countUp(el,to,fmt){
+  if(!first||matchMedia("(prefers-reduced-motion:reduce)").matches){el.textContent=fmt(to);return}
+  const t0=performance.now();
+  (function s(t){const p=Math.min(1,(t-t0)/800),e=1-Math.pow(1-p,3);el.textContent=fmt(Math.round(to*e));if(p<1)requestAnimationFrame(s)})(t0);
+}
+function kpis(){
+  const d=scoped(),total=d.length,reg=d.filter(l=>l.app).length,work=d.reduce((s,l)=>s+l.work,0),pay=d.reduce((s,l)=>s+l.pay,0);
+  const pct=total?Math.round(reg/total*100):0,wl=d.filter(l=>l.work>0).length;
+  const k=[
+   ["Total leads",total,String,"Everyone added in this period","c1"],
+   ["NME app registrations",reg,String,pct+"% of leads registered","c2"],
+   ["Digital work count",work,String,"Across "+wl+" lead"+(wl===1?"":"s"),"c3"],
+   ["Total payment",pay,inr,reg?"Avg "+inr(Math.round(pay/reg))+" per registration":"No registrations yet","c4"]
+  ];
+  $("kpis").innerHTML=k.map((x,i)=>`<div class="card kpi" style="--c:var(--${x[4]});--s:var(--${x[4]}s)"><div class="chip">${ICONS[i]}</div><div class="label">${x[0]}</div><div class="num" data-i="${i}">0</div><div class="note">${x[3]}</div></div>`).join("");
+  document.querySelectorAll(".kpi .num").forEach(el=>{const x=k[+el.dataset.i];countUp(el,x[1],x[2])});
+  first=false;
+  const sts=["New","Contacted","Registered","Lost"],cnt=Object.fromEntries(sts.map(s=>[s,d.filter(l=>l.status===s).length]));
+  $("stack").innerHTML=sts.map(s=>`<i style="width:${total?cnt[s]/total*100:0}%;background:${COL[s]}"></i>`).join("");
+  $("legend").innerHTML=sts.map(s=>`<div><span class="dot" style="background:${COL[s]}"></span>${s}<b>${cnt[s]}</b></div>`).join("");
+  const srcs=[...new Set(LEADS.map(l=>l.src))].map(s=>[s,d.filter(l=>l.src===s&&l.app).length]).sort((a,b)=>b[1]-a[1]);
+  const mx=Math.max(1,...srcs.map(s=>s[1]));
+  $("src").innerHTML=srcs.map(s=>`<div><span>${s[0]}</span><div class="track"><i style="width:${s[1]/mx*100}%"></i></div><span>${s[1]}</span></div>`).join("");
+}
+function rows(){
+  const q=$("q").value.trim().toLowerCase(),st=$("status").value;
+  const d=scoped().filter(l=>(!st||l.status===st)&&(!q||(l.name+l.phone+l.src).toLowerCase().includes(q)));
+  $("rows").innerHTML=d.length?d.map(l=>{
+    const ini=l.name.split(" ").slice(0,2).map(w=>w[0]).join("");
+    return `<tr>
+    <td><div class="who"><div class="av" style="--c:${COL[l.status]};--s:${SOFT[l.status]}">${ini}</div><div><b>${l.name}</b><span>${l.phone}</span></div></div></td>
+    <td>${l.src}</td>
+    <td><span class="tag" style="--c:${COL[l.status]};--s:${SOFT[l.status]}">${l.status}</span></td>
+    <td>${l.app?'<span class="ok">Registered</span>':'<span class="no">Not yet</span>'}</td>
+    <td class="r">${l.work}</td>
+    <td class="r pay">${l.pay?inr(l.pay):"–"}</td>
+    <td>${l.days===0?"Today":l.days+" day"+(l.days>1?"s":"")+" ago"}</td></tr>`}).join("")
+    :`<tr><td colspan="7" class="empty">No leads match. Clear the search or choose another status.</td></tr>`;
+  $("foot").textContent="Showing "+d.length+" of "+scoped().length+" leads";
+}
+$("seg").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;range=b.dataset.r;
+  document.querySelectorAll("#seg button").forEach(x=>x.setAttribute("aria-pressed",x===b));kpis();rows()});
+$("q").addEventListener("input",rows);$("status").addEventListener("change",rows);
+kpis();rows();
+</script>
+</body>
+</html>
